@@ -1,6 +1,7 @@
-#📘 Smart Room Control Center 2.0
+# 📘 Smart Room Control Center 2.0
 
-###Inteligentny Asystent Pokoju z Raspberry Pi 5, Web App i Mobile App
+*Inteligentny Asystent Pokoju z Raspberry Pi 5, Web App i Mobile App*
+
 ---
 
 ## 🚀 Opis projektu
@@ -14,7 +15,7 @@
 - ⚙️ **Backend z API i bazą danych**  
 - 🤖 **Moduły automatyzacji i AI**
 
-System umożliwia pełną kontrolę: oświetlenie, muzyka, tryby, bezpieczeństwo i informacje wyświetlane na ekranie.
+System umożliwia pełną kontrolę nad pokojem: **oświetlenie, muzyka, tryby, bezpieczeństwo i informacje wyświetlane na ekranie.**
 
 ---
 
@@ -100,20 +101,23 @@ AI analizuje zachowania i sugeruje automatyzacje:
 ---
 
 ## 📌 Status projektu
+
 **Projekt w trakcie aktywnego rozwoju (2024/2025).**
 
 ---
 
 ## 🤝 Współtwórz
+
 Pull Requesty i Issues mile widziane!
 
 ---
 
 ## 📄 Licencja
+
 **MIT**
 
 ---
 
 ## 👤 Autor
-**Wiktor Pawłowski**
 
+**Wiktor Pawłowski**
