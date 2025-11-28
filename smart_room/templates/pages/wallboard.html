@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>WallBoard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { overflow: hidden; cursor: none; }
+        /* Efekt szkła dla kalendarza */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-black text-white h-screen p-8 flex gap-8 transition-colors duration-1000">
+
+    <!-- LEWA KOLUMNA: Zegar i Kalendarz (40% szerokości) -->
+    <div class="w-5/12 flex flex-col gap-6">
+
+        <!-- Zegar -->
+        <div>
+            <div id="clock" class="text-7xl font-black tracking-tighter leading-none">00:00</div>
+            <div id="date" class="text-xl text-gray-400 font-medium mt-1 uppercase tracking-widest">Poniedziałek</div>
+        </div>
+
+        <!-- Kalendarz -->
+        <div class="glass-panel rounded-2xl p-5 flex-grow flex flex-col">
+            <h3 class="text-gray-500 uppercase text-xs font-bold mb-4 tracking-widest border-b border-gray-800 pb-2">
+                📅 NADCHODZĄCE WYDARZENIA
+            </h3>
+            <div id="calendar-list" class="space-y-3 overflow-hidden">
+                <!-- Tu JavaScript wstawi wydarzenia -->
+                <p class="text-gray-600 animate-pulse">Pobieranie kalendarza...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRAWA KOLUMNA: Status i Sensory (60% szerokości) -->
+    <div class="w-7/12 flex flex-col justify-between">
+
+        <!-- Sensory (Góra Prawa) -->
+        <div class="flex justify-end gap-8 text-right">
+             <div>
+                 <div class="text-5xl font-bold" id="temp">{{ sensor.temperature|default:"--" }}°</div>
+                 <div class="text-xs text-gray-500 uppercase">Temp</div>
+             </div>
+             <div>
+                 <div class="text-5xl font-bold text-blue-400" id="hum">{{ sensor.humidity|default:"--" }}%</div>
+                 <div class="text-xs text-gray-500 uppercase">Wilgotność</div>
+             </div>
+        </div>
+
+        <!-- Tryb (Środek Prawa) -->
+        <div class="text-center my-auto">
+            <p class="text-gray-600 uppercase tracking-[0.5em] text-xs mb-2">SYSTEM MODE</p>
+            <h1 id="mode-name" class="text-6xl xl:text-8xl font-black uppercase bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-600">
+                LOADING
+            </h1>
+        </div>
+
+        <!-- Pasek statusu (Dół) -->
+        <div class="w-full h-1 bg-gray-900 rounded-full overflow-hidden mt-4">
+            <div id="status-bar" class="h-full w-full bg-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.5)]"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. ZEGAR ---
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('pl-PL', {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('date').innerText = now.toLocaleDateString('pl-PL', {weekday: 'long', day: 'numeric', month: 'long'});
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- 2. DANE SYSTEMOWE (TRYB) ---
+        async function fetchSystemData() {
+            try {
+                const res = await fetch('/api/modes/current/');
+                if (res.ok) {
+                    const mode = await res.json();
+                    document.getElementById('mode-name').innerText = mode.name;
+                    const color = mode.led_color_hex;
+                    document.getElementById('status-bar').style.backgroundColor = color;
+                    document.getElementById('status-bar').style.boxShadow = `0 0 20px ${color}`;
+                    document.getElementById('mode-name').style.textShadow = `0 0 40px ${color}33`;
+                }
+            } catch (e) { console.error(e); }
+        }
+        setInterval(fetchSystemData, 3000); // Co 3 sekundy
+        fetchSystemData();
+
+        // --- 3. KALENDARZ (Co 60 sekund wystarczy) ---
+        async function fetchCalendar() {
+            try {
+                const res = await fetch('/api/calendar/');
+                const events = await res.json();
+                const list = document.getElementById('calendar-list');
+                list.innerHTML = ''; // Wyczyść listę
+
+                if (events.length === 0) {
+                    list.innerHTML = '<p class="text-gray-500 text-sm">Brak planów na najbliższy czas.</p>';
+                    return;
+                }
+
+                events.forEach(evt => {
+                    // Kolorowanie "Dziś" na inny kolor
+                    const dayClass = evt.is_today ? 'text-blue-400 font-bold' : 'text-gray-400';
+                    const bgClass = evt.is_today ? 'bg-white/10 border-l-2 border-blue-500' : 'bg-transparent border-l-2 border-gray-700';
+
+                    const html = `
+                        <div class="flex items-center p-2 rounded ${bgClass}">
+                            <div class="w-16 text-right mr-4">
+                                <div class="text-xs ${dayClass}">${evt.day}</div>
+                                <div class="text-lg font-mono leading-none">${evt.time}</div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium truncate">${evt.name}</div>
+                            </div>
+                        </div>
+                    `;
+                    list.innerHTML += html;
+                });
+
+            } catch (e) {
+                console.error('Calendar error:', e);
+            }
+        }
+        fetchCalendar(); // Pierwsze pobranie
+        setInterval(fetchCalendar, 60000); // Odświeżaj co minutę
+    </script>
+</body>
+</html>
